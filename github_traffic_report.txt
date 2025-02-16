@@ -1,0 +1,229 @@
+[bold]Repository:[/bold] RomanTsisyk/bleX
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 3
+[magenta]Unique Cloners:[/magenta] 2
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-03: 1 clones
+  * 2025-02-08: 1 clones
+  * 2025-02-15: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/CoordinatorX
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 2
+[magenta]Unique Cloners:[/magenta] 2
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-03: 1 clones
+  * 2025-02-15: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/CryptoKit
+[cyan]Views (last 14 days):[/cyan] 14
+[cyan]Unique Visitors:[/cyan] 2
+[magenta]Clones (last 14 days):[/magenta] 5
+[magenta]Unique Cloners:[/magenta] 4
+
+[bold]Daily Views:[/bold]
+  * 2025-02-07: 14 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-07: 1 clones
+  * 2025-02-09: 1 clones
+  * 2025-02-13: 1 clones
+  * 2025-02-14: 1 clones
+  * 2025-02-15: 1 clones
+
+[bold]Releases:[/bold] 1
+  * 1.0.0 — Downloads: 2
+  * 1.0.0 — Downloads: 2
+
+[bold]Repository:[/bold] RomanTsisyk/Deep-Relax-YouTube-Player
+[cyan]Views (last 14 days):[/cyan] 7
+[cyan]Unique Visitors:[/cyan] 5
+[magenta]Clones (last 14 days):[/magenta] 2
+[magenta]Unique Cloners:[/magenta] 2
+
+[bold]Daily Views:[/bold]
+  * 2025-02-05: 3 views
+  * 2025-02-08: 1 views
+  * 2025-02-11: 1 views
+  * 2025-02-13: 1 views
+  * 2025-02-15: 1 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-03: 1 clones
+  * 2025-02-09: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/GitHub-Traffic-Analysis-Tool
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 0
+[magenta]Unique Cloners:[/magenta] 0
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  (No data available)
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/Google-Play-Console-Reviews-Visualization-Tool
+[cyan]Views (last 14 days):[/cyan] 1
+[cyan]Unique Visitors:[/cyan] 1
+[magenta]Clones (last 14 days):[/magenta] 2
+[magenta]Unique Cloners:[/magenta] 2
+
+[bold]Daily Views:[/bold]
+  * 2025-02-04: 1 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-03: 1 clones
+  * 2025-02-11: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/Guess_Game
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 1
+[magenta]Unique Cloners:[/magenta] 1
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-07: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/My_chrome_extentions
+[cyan]Views (last 14 days):[/cyan] 7
+[cyan]Unique Visitors:[/cyan] 3
+[magenta]Clones (last 14 days):[/magenta] 3
+[magenta]Unique Cloners:[/magenta] 3
+
+[bold]Daily Views:[/bold]
+  * 2025-02-04: 4 views
+  * 2025-02-05: 2 views
+  * 2025-02-10: 1 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-09: 1 clones
+  * 2025-02-10: 1 clones
+  * 2025-02-11: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/NFC-CardReader
+[cyan]Views (last 14 days):[/cyan] 47
+[cyan]Unique Visitors:[/cyan] 3
+[magenta]Clones (last 14 days):[/magenta] 1
+[magenta]Unique Cloners:[/magenta] 1
+
+[bold]Daily Views:[/bold]
+  * 2025-02-03: 27 views
+  * 2025-02-05: 3 views
+  * 2025-02-09: 17 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-12: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/RickAndMorty
+[cyan]Views (last 14 days):[/cyan] 9
+[cyan]Unique Visitors:[/cyan] 1
+[magenta]Clones (last 14 days):[/magenta] 1
+[magenta]Unique Cloners:[/magenta] 1
+
+[bold]Daily Views:[/bold]
+  * 2025-02-07: 9 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-15: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/romantsisyk.github.io
+[cyan]Views (last 14 days):[/cyan] 55
+[cyan]Unique Visitors:[/cyan] 2
+[magenta]Clones (last 14 days):[/magenta] 16
+[magenta]Unique Cloners:[/magenta] 12
+
+[bold]Daily Views:[/bold]
+  * 2025-02-04: 4 views
+  * 2025-02-05: 18 views
+  * 2025-02-06: 2 views
+  * 2025-02-07: 25 views
+  * 2025-02-16: 6 views
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-05: 7 clones
+  * 2025-02-07: 4 clones
+  * 2025-02-10: 1 clones
+  * 2025-02-14: 1 clones
+  * 2025-02-15: 1 clones
+  * 2025-02-16: 2 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/SlavicAPI-AndroidDemo
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 1
+[magenta]Unique Cloners:[/magenta] 1
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-12: 1 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/sunrise-sunset-sdk
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 0
+[magenta]Unique Cloners:[/magenta] 0
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  (No data available)
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+[bold]Repository:[/bold] RomanTsisyk/WeatherStream
+[cyan]Views (last 14 days):[/cyan] 0
+[cyan]Unique Visitors:[/cyan] 0
+[magenta]Clones (last 14 days):[/magenta] 3
+[magenta]Unique Cloners:[/magenta] 3
+
+[bold]Daily Views:[/bold]
+  (No data available)
+
+[bold]Daily Clones:[/bold]
+  * 2025-02-05: 1 clones
+  * 2025-02-14: 2 clones
+
+[italic]No releases or releases are hidden (404).[/italic]
+
+
+
