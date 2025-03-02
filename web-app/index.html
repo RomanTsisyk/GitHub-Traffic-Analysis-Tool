@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Traffic Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Add Chart.js and plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <!-- Add axios for API calls -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen login-body">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-logo">
+                    <svg height="68" viewBox="0 0 16 16" width="68" fill="#333">
+                        <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                </div>
+                <h1>GitHub Traffic Dashboard</h1>
+                <p class="login-desc">Enter your GitHub Personal Access Token to view your repository traffic data</p>
+                
+                <div class="app-features">
+                    <h3>Track Your Repository Performance</h3>
+                    <ul>
+                        <li><span class="feature-icon">📊</span> View traffic stats for all your repositories</li>
+                        <li><span class="feature-icon">👁️</span> Monitor daily views and unique visitors</li>
+                        <li><span class="feature-icon">📥</span> Track repository clones over time</li>
+                        <li><span class="feature-icon">🔍</span> Zoom in on specific time periods with interactive charts</li>
+                        <li><span class="feature-icon">📈</span> Compare traffic across multiple repositories</li>
+                    </ul>
+                    <div class="feature-note">
+                        Your data stays private - no token data is stored on our servers.
+                    </div>
+                </div>
+                
+                <div class="login-form">
+                    <div class="form-group">
+                        <label for="tokenInput">Personal Access Token</label>
+                        <input 
+                            type="password" 
+                            id="tokenInput" 
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" 
+                            autocomplete="off">
+                    </div>
+                    
+                    <div id="errorMessage" class="error-message hidden"></div>
+                    
+                    <button id="loginButton" class="login-button">Sign In</button>
+                    
+                    <div class="login-help">
+                        <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
+                            How to create a Personal Access Token
+                        </a>
+                        <div class="token-note">
+                            Requires a token with "repo" scope to access traffic data.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="screen dashboard-body hidden">
+        <header class="dashboard-header">
+            <h1>GitHub Traffic Dashboard</h1>
+            <div class="user-info">
+                <span>User: </span>
+                <span id="username" class="username"></span>
+                <button id="logoutButton" class="logout-button">Logout</button>
+            </div>
+        </header>
+
+        <main id="dashboardContent" class="dashboard-content">
+            <section class="chart-section">
+                <h2>Daily Views per Repository</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="resetZoom('viewsChart')">Reset Zoom</button>
+                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="viewsChart"></canvas>
+                </div>
+            </section>
+
+            <section class="chart-section">
+                <h2>Overall Daily Views</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="resetZoom('overallViewsChart')">Reset Zoom</button>
+                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="overallViewsChart"></canvas>
+                </div>
+            </section>
+
+            <section class="chart-section">
+                <h2>Daily Clones per Repository</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="resetZoom('clonesChart')">Reset Zoom</button>
+                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="clonesChart"></canvas>
+                </div>
+            </section>
+
+            <section class="chart-section">
+                <h2>Overall Daily Clones</h2>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="resetZoom('overallClonesChart')">Reset Zoom</button>
+                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="overallClonesChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingText" class="loading-text">Connecting to GitHub...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
