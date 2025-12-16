@@ -1,31 +1,90 @@
+// ==================== Configuration ====================
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const BATCH_SIZE = 5; // Number of parallel API requests
+
+// ==================== State ====================
+let allRepoData = [];
+let currentFilter = 'all';
+let searchQuery = '';
+
+// ==================== Initialization ====================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('GitHub Traffic Dashboard Web App Initialized');
-    
-    // Initialize UI elements
+    initializeTheme();
     initializeUI();
-    
-    // Check if user is already logged in (token in localStorage)
     checkLoginState();
 });
 
-// --- UI Helper Functions --- //
-function showLoading(message = 'Loading...') {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-    loadingText.textContent = message;
-    loadingOverlay.classList.remove('hidden');
+// ==================== Theme Management ====================
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+
+    // Update charts for new theme
+    updateChartsTheme();
+}
+
+function updateThemeIcon(theme) {
+    const icon = document.querySelector('.theme-icon');
+    if (icon) {
+        icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
+function updateChartsTheme() {
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
+
+    Chart.defaults.color = textColor;
+    Chart.defaults.borderColor = gridColor;
+
+    // Redraw charts if they exist
+    ['viewsChart', 'overallViewsChart', 'clonesChart', 'overallClonesChart'].forEach(id => {
+        const chart = Chart.getChart(id);
+        if (chart) {
+            chart.options.scales.x.ticks.color = textColor;
+            chart.options.scales.y.ticks.color = textColor;
+            chart.options.scales.x.grid.color = gridColor;
+            chart.options.scales.y.grid.color = gridColor;
+            chart.update();
+        }
+    });
+}
+
+// ==================== UI Helpers ====================
+function showLoading(message = 'Loading...', subtext = '') {
+    const overlay = document.getElementById('loadingOverlay');
+    document.getElementById('loadingText').textContent = message;
+    document.getElementById('loadingSubtext').textContent = subtext;
+    overlay.classList.remove('hidden');
 }
 
 function hideLoading() {
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    loadingOverlay.classList.add('hidden');
+    document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+function updateProgress(current, total) {
+    const percent = Math.round((current / total) * 100);
+    document.getElementById('progressBar').style.width = `${percent}%`;
+    document.getElementById('loadingSubtext').textContent = `${current} of ${total} repositories`;
 }
 
 function showError(message) {
-    const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = message;
-    errorMessage.classList.remove('hidden');
-    console.error('Error:', message);
+    const el = document.getElementById('errorMessage');
+    el.textContent = message;
+    el.classList.remove('hidden');
+}
+
+function hideError() {
+    document.getElementById('errorMessage').classList.add('hidden');
 }
 
 function showLoginScreen() {
@@ -36,145 +95,84 @@ function showLoginScreen() {
 function showDashboard() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashboardScreen').classList.remove('hidden');
-    document.getElementById('dashboardContent').classList.remove('hidden');
 }
 
-function clearCharts() {
-    // Destroy existing charts to prevent memory leaks
-    if (window.viewsChart) {
-        window.viewsChart.destroy();
-        window.viewsChart = null;
-    }
-    if (window.overallViewsChart) {
-        window.overallViewsChart.destroy();
-        window.overallViewsChart = null;
-    }
-    if (window.clonesChart) {
-        window.clonesChart.destroy();
-        window.clonesChart = null;
-    }
-    if (window.overallClonesChart) {
-        window.overallClonesChart.destroy();
-        window.overallClonesChart = null;
-    }
-}
-
-// Reset zoom on any chart
-window.resetZoom = function(chartId) {
-    console.log('Resetting zoom for chart:', chartId);
-    const chart = Chart.getChart(chartId);
-    if (chart) {
-        chart.resetZoom();
-    } else {
-        console.error('Chart not found:', chartId);
-    }
-};
-
-// --- UI Initialization --- //
+// ==================== UI Initialization ====================
 function initializeUI() {
-    // Login screen elements
-    const loginButton = document.getElementById('loginButton');
-    const tokenInput = document.getElementById('tokenInput');
-    const errorMessage = document.getElementById('errorMessage');
-    
-    // Dashboard elements
-    const logoutButton = document.getElementById('logoutButton');
-    
-    // Loading overlay
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-    
-    // Add event listeners
-    loginButton.addEventListener('click', handleLogin);
-    logoutButton.addEventListener('click', handleLogout);
-    
-    // Allow pressing Enter to login
-    tokenInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            loginButton.click();
-        }
+    // Login
+    document.getElementById('loginButton').addEventListener('click', handleLogin);
+    document.getElementById('tokenInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
     });
-    
-    // Clear error on input change
-    tokenInput.addEventListener('input', () => {
-        errorMessage.classList.add('hidden');
+    document.getElementById('tokenInput').addEventListener('input', hideError);
+
+    // Dashboard
+    document.getElementById('logoutButton').addEventListener('click', handleLogout);
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('refreshBtn').addEventListener('click', () => refreshData(true));
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+    // Search & Filter
+    document.getElementById('repoSearch').addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase();
+        applyFilters();
     });
-    
-    console.log('UI elements initialized');
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentFilter = e.target.dataset.filter;
+            applyFilters();
+        });
+    });
 }
 
-// Check if the user is already logged in
+// ==================== Authentication ====================
 function checkLoginState() {
     const token = localStorage.getItem('github_token');
     const userData = localStorage.getItem('github_user');
-    
+
     if (token && userData) {
         try {
             const user = JSON.parse(userData);
-            console.log('User already logged in:', user.login);
-            document.getElementById('username').textContent = user.login;
+            updateUserUI(user);
             showDashboard();
-            fetchRepositoryData(token, user.login);
+            loadData(token, user.login);
         } catch (error) {
-            console.error('Error parsing user data:', error);
             handleLogout();
         }
-    } else {
-        console.log('User not logged in');
     }
 }
 
-// --- Login/Logout Handling --- //
 async function handleLogin() {
-    const tokenInput = document.getElementById('tokenInput');
-    const token = tokenInput.value.trim();
-    
-    if (!validateToken(token)) {
-        return;
-    }
-    
+    const token = document.getElementById('tokenInput').value.trim();
+
+    if (!validateToken(token)) return;
+
     showLoading('Connecting to GitHub...');
-    
+
     try {
-        // Validate token by fetching user data
         const user = await fetchUserData(token);
-        
-        if (user) {
-            // Store token and user data
-            localStorage.setItem('github_token', token);
-            localStorage.setItem('github_user', JSON.stringify(user));
-            
-            // Update UI
-            document.getElementById('username').textContent = user.login;
-            
-            // Navigate to dashboard
-            showDashboard();
-            
-            // Fetch repository data
-            fetchRepositoryData(token, user.login);
-        } else {
-            showError('Failed to authenticate with GitHub. Please check your token.');
-            hideLoading();
-        }
+
+        localStorage.setItem('github_token', token);
+        localStorage.setItem('github_user', JSON.stringify(user));
+
+        updateUserUI(user);
+        showDashboard();
+        loadData(token, user.login);
     } catch (error) {
-        console.error('Login error:', error);
         showError(`Authentication failed: ${error.message}`);
         hideLoading();
     }
 }
 
 function handleLogout() {
-    // Clear stored data
     localStorage.removeItem('github_token');
     localStorage.removeItem('github_user');
-    
-    // Clear any existing chart data
+    localStorage.removeItem('traffic_cache');
     clearCharts();
-    
-    // Navigate back to login
     showLoginScreen();
-    
-    console.log('User logged out');
 }
 
 function validateToken(token) {
@@ -182,497 +180,429 @@ function validateToken(token) {
         showError('Please enter your GitHub Personal Access Token');
         return false;
     }
-
     if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-        showError('Invalid token format. GitHub Personal Access Tokens typically start with "ghp_" or "github_pat_"');
+        showError('Invalid token format. GitHub tokens start with "ghp_" or "github_pat_"');
         return false;
     }
-    
     return true;
 }
 
-// --- API Calls --- //
-async function fetchUserData(token) {
-    try {
-        const response = await axios.get('https://api.github.com/user', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-        
-        console.log('User data fetched successfully');
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        throw new Error(error.response?.data?.message || 'Failed to fetch user data');
-    }
+function updateUserUI(user) {
+    document.getElementById('username').textContent = user.login;
+    const avatar = document.getElementById('userAvatar');
+    avatar.src = user.avatar_url;
+    avatar.style.display = 'block';
 }
 
-async function fetchRepositoryData(token, username) {
-    showLoading('Fetching repository data...');
-    
-    try {
-        // Fetch repositories
-        const reposResponse = await axios.get(`https://api.github.com/users/${username}/repos`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            params: { 
-                per_page: 100 
-            }
-        });
-        
-        const repos = reposResponse.data;
-        console.log(`Found ${repos.length} repositories`);
-        
-        if (repos.length === 0) {
-            hideLoading();
-            showError('No repositories found for this account.');
-            return;
-        }
-        
-        // For each repo, get traffic data
-        const repoData = [];
-        for (const repo of repos) {
-            try {
-                // Update loading text to show progress
-                showLoading(`Fetching data for ${repo.name}...`);
-                
-                const viewsResponse = await axios.get(
-                    `https://api.github.com/repos/${username}/${repo.name}/traffic/views`,
-                    { 
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
-                
-                const clonesResponse = await axios.get(
-                    `https://api.github.com/repos/${username}/${repo.name}/traffic/clones`,
-                    { 
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
-                
-                repoData.push({
-                    name: repo.name,
-                    views: viewsResponse.data,
-                    clones: clonesResponse.data
-                });
-            } catch (error) {
-                console.error(`Error fetching data for ${repo.name}:`, error);
-                // Continue with other repos
-            }
-        }
-        
-        // Process data and create charts
-        processRepositoryData({
-            success: true,
-            username, 
-            repos: repoData
-        });
-        
-        // Hide loading and show dashboard content
+// ==================== Data Loading ====================
+async function loadData(token, username) {
+    // Check cache first
+    const cache = getCache();
+    if (cache && !isCacheExpired(cache)) {
+        console.log('Using cached data');
+        processData(cache.data);
+        updateCacheInfo(cache.timestamp);
         hideLoading();
-    } catch (error) {
-        console.error('Error fetching repository data:', error);
-        hideLoading();
-        showError(`Failed to fetch repository data: ${error.message}`);
-    }
-}
-
-// --- Data Processing --- //
-function processRepositoryData(data) {
-    const { repos } = data;
-    
-    if (!repos || repos.length === 0) {
-        showError('No repository data available.');
         return;
     }
-    
-    console.log(`Processing data for ${repos.length} repositories`);
-    
-    // Process Views Data
-    const viewsByRepo = {};
-    const allViewDates = new Set();
-    
+
+    await refreshData(false);
+}
+
+async function refreshData(forceRefresh = false) {
+    const token = localStorage.getItem('github_token');
+    const userData = JSON.parse(localStorage.getItem('github_user'));
+
+    if (!token || !userData) {
+        handleLogout();
+        return;
+    }
+
+    showLoading('Fetching repositories...');
+
+    try {
+        // Fetch all repos
+        const repos = await fetchAllRepos(token, userData.login);
+
+        if (repos.length === 0) {
+            hideLoading();
+            showError('No repositories found.');
+            return;
+        }
+
+        showLoading('Fetching traffic data...', `0 of ${repos.length} repositories`);
+
+        // Fetch traffic data in parallel batches
+        const repoData = await fetchTrafficDataParallel(token, userData.login, repos);
+
+        // Cache the data
+        setCache(repoData);
+        updateCacheInfo(Date.now());
+
+        // Process and display
+        processData(repoData);
+        hideLoading();
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        hideLoading();
+        showError(`Failed to fetch data: ${error.message}`);
+    }
+}
+
+// ==================== API Calls ====================
+async function fetchUserData(token) {
+    const response = await axios.get('https://api.github.com/user', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.data;
+}
+
+async function fetchAllRepos(token, username) {
+    const repos = [];
+    let page = 1;
+
+    while (true) {
+        const response = await axios.get(`https://api.github.com/users/${username}/repos`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            params: { per_page: 100, page }
+        });
+
+        repos.push(...response.data);
+
+        if (response.data.length < 100) break;
+        page++;
+    }
+
+    return repos;
+}
+
+async function fetchTrafficDataParallel(token, username, repos) {
+    const results = [];
+    const total = repos.length;
+
+    // Process in batches
+    for (let i = 0; i < repos.length; i += BATCH_SIZE) {
+        const batch = repos.slice(i, i + BATCH_SIZE);
+
+        const batchPromises = batch.map(async (repo) => {
+            try {
+                const [viewsRes, clonesRes] = await Promise.all([
+                    axios.get(`https://api.github.com/repos/${username}/${repo.name}/traffic/views`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).catch(() => ({ data: { count: 0, uniques: 0, views: [] } })),
+                    axios.get(`https://api.github.com/repos/${username}/${repo.name}/traffic/clones`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).catch(() => ({ data: { count: 0, uniques: 0, clones: [] } }))
+                ]);
+
+                return {
+                    name: repo.name,
+                    views: viewsRes.data,
+                    clones: clonesRes.data
+                };
+            } catch (error) {
+                return {
+                    name: repo.name,
+                    views: { count: 0, uniques: 0, views: [] },
+                    clones: { count: 0, uniques: 0, clones: [] }
+                };
+            }
+        });
+
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+
+        updateProgress(Math.min(i + BATCH_SIZE, total), total);
+    }
+
+    return results;
+}
+
+// ==================== Caching ====================
+function getCache() {
+    try {
+        const cache = localStorage.getItem('traffic_cache');
+        return cache ? JSON.parse(cache) : null;
+    } catch {
+        return null;
+    }
+}
+
+function setCache(data) {
+    const cache = {
+        timestamp: Date.now(),
+        data: data
+    };
+    localStorage.setItem('traffic_cache', JSON.stringify(cache));
+}
+
+function isCacheExpired(cache) {
+    return Date.now() - cache.timestamp > CACHE_DURATION;
+}
+
+function updateCacheInfo(timestamp) {
+    const date = new Date(timestamp);
+    const timeStr = date.toLocaleTimeString();
+    document.getElementById('cacheInfo').textContent =
+        `Last updated: ${timeStr} • Data cached for 30 minutes • Click 🔄 to refresh`;
+}
+
+// ==================== Data Processing ====================
+function processData(repos) {
+    allRepoData = repos;
+
+    // Calculate totals
+    let totalViews = 0, uniqueVisitors = 0, totalClones = 0;
+
     repos.forEach(repo => {
-        if (repo.views && repo.views.views) {
+        totalViews += repo.views?.count || 0;
+        uniqueVisitors += repo.views?.uniques || 0;
+        totalClones += repo.clones?.count || 0;
+    });
+
+    // Update stats cards
+    document.getElementById('totalViews').textContent = formatNumber(totalViews);
+    document.getElementById('uniqueVisitors').textContent = formatNumber(uniqueVisitors);
+    document.getElementById('totalClones').textContent = formatNumber(totalClones);
+    document.getElementById('totalRepos').textContent = repos.length;
+
+    // Show top repositories
+    displayTopRepos(repos);
+
+    // Apply filters and create charts
+    applyFilters();
+}
+
+function displayTopRepos(repos) {
+    const grid = document.getElementById('topReposGrid');
+
+    // Sort by total views
+    const sorted = [...repos]
+        .map(r => ({
+            name: r.name,
+            views: r.views?.count || 0,
+            clones: r.clones?.count || 0
+        }))
+        .filter(r => r.views > 0 || r.clones > 0)
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 5);
+
+    if (sorted.length === 0) {
+        grid.innerHTML = '<p style="color: var(--text-muted); padding: 20px;">No traffic data available yet.</p>';
+        return;
+    }
+
+    grid.innerHTML = sorted.map((repo, i) => `
+        <div class="top-repo-card">
+            <span class="repo-rank">#${i + 1}</span>
+            <div class="repo-info">
+                <div class="repo-name">${repo.name}</div>
+                <div class="repo-stats">
+                    <span>👁️ ${repo.views} views</span>
+                    <span>📥 ${repo.clones} clones</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function applyFilters() {
+    let filtered = [...allRepoData];
+
+    // Apply search
+    if (searchQuery) {
+        filtered = filtered.filter(r => r.name.toLowerCase().includes(searchQuery));
+    }
+
+    // Apply filter
+    if (currentFilter === 'views') {
+        filtered = filtered.filter(r => (r.views?.count || 0) > 0);
+    } else if (currentFilter === 'clones') {
+        filtered = filtered.filter(r => (r.clones?.count || 0) > 0);
+    }
+
+    // Create charts with filtered data
+    createAllCharts(filtered);
+}
+
+// ==================== Charts ====================
+function clearCharts() {
+    ['viewsChart', 'overallViewsChart', 'clonesChart', 'overallClonesChart'].forEach(id => {
+        const chart = Chart.getChart(id);
+        if (chart) chart.destroy();
+    });
+}
+
+window.resetZoom = function(chartId) {
+    const chart = Chart.getChart(chartId);
+    if (chart) chart.resetZoom();
+};
+
+const chartColors = [
+    '#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+];
+
+const zoomOptions = {
+    pan: { enabled: true, mode: 'xy' },
+    zoom: {
+        wheel: { enabled: true },
+        pinch: { enabled: true },
+        mode: 'xy'
+    }
+};
+
+function createAllCharts(repos) {
+    clearCharts();
+
+    const { viewsByRepo, clonesByRepo, allViewDates, allCloneDates } = processChartData(repos);
+
+    const sortedViewDates = Array.from(allViewDates).sort();
+    const sortedCloneDates = Array.from(allCloneDates).sort();
+
+    createLineChart('viewsChart', sortedViewDates, viewsByRepo, 'Views');
+    createOverallChart('overallViewsChart', sortedViewDates, viewsByRepo, 'Total Views', '#3b82f6');
+    createLineChart('clonesChart', sortedCloneDates, clonesByRepo, 'Clones');
+    createOverallChart('overallClonesChart', sortedCloneDates, clonesByRepo, 'Total Clones', '#22c55e');
+}
+
+function processChartData(repos) {
+    const viewsByRepo = {};
+    const clonesByRepo = {};
+    const allViewDates = new Set();
+    const allCloneDates = new Set();
+
+    repos.forEach(repo => {
+        if (repo.views?.views) {
             viewsByRepo[repo.name] = {};
-            
-            repo.views.views.forEach(view => {
-                const date = view.timestamp.replace('T00:00:00Z', '');
-                viewsByRepo[repo.name][date] = view.count;
+            repo.views.views.forEach(v => {
+                const date = v.timestamp.split('T')[0];
+                viewsByRepo[repo.name][date] = v.count;
                 allViewDates.add(date);
             });
         }
-    });
-    
-    // Process Clones Data
-    const clonesByRepo = {};
-    const allCloneDates = new Set();
-    
-    repos.forEach(repo => {
-        if (repo.clones && repo.clones.clones) {
+
+        if (repo.clones?.clones) {
             clonesByRepo[repo.name] = {};
-            
-            repo.clones.clones.forEach(clone => {
-                const date = clone.timestamp.replace('T00:00:00Z', '');
-                clonesByRepo[repo.name][date] = clone.count;
+            repo.clones.clones.forEach(c => {
+                const date = c.timestamp.split('T')[0];
+                clonesByRepo[repo.name][date] = c.count;
                 allCloneDates.add(date);
             });
         }
     });
-    
-    // Sort dates
-    const sortedViewDates = Array.from(allViewDates).sort();
-    const sortedCloneDates = Array.from(allCloneDates).sort();
-    
-    console.log(`Found ${sortedViewDates.length} view dates and ${sortedCloneDates.length} clone dates`);
-    
-    // Prepare chart data
-    const viewsChartData = prepareChartData(viewsByRepo, sortedViewDates);
-    const clonesChartData = prepareChartData(clonesByRepo, sortedCloneDates);
-    
-    // Calculate overall data
-    const overallViews = calculateOverallData(viewsByRepo, sortedViewDates);
-    const overallClones = calculateOverallData(clonesByRepo, sortedCloneDates);
-    
-    // Create the charts
-    console.log('Creating charts...');
-    createViewsChart(sortedViewDates, viewsChartData);
-    createOverallViewsChart(sortedViewDates, overallViews);
-    createClonesChart(sortedCloneDates, clonesChartData);
-    createOverallClonesChart(sortedCloneDates, overallClones);
-    console.log('Charts created');
+
+    return { viewsByRepo, clonesByRepo, allViewDates, allCloneDates };
 }
 
-// Prepare data for chart
-function prepareChartData(dataByRepo, sortedDates) {
-    const result = {};
-    
-    for (const repo in dataByRepo) {
-        result[repo] = sortedDates.map(date => dataByRepo[repo][date] || 0);
-    }
-    
-    return result;
-}
+function createLineChart(canvasId, dates, dataByRepo, label) {
+    if (dates.length === 0) return;
 
-// Calculate overall data by date
-function calculateOverallData(dataByRepo, sortedDates) {
-    return sortedDates.map(date => {
-        let sum = 0;
-        for (const repo in dataByRepo) {
-            sum += dataByRepo[repo][date] || 0;
+    const datasets = Object.keys(dataByRepo).map((repo, i) => ({
+        label: repo,
+        data: dates.map(d => dataByRepo[repo][d] || 0),
+        borderColor: chartColors[i % chartColors.length],
+        backgroundColor: chartColors[i % chartColors.length],
+        fill: false,
+        tension: 0.3,
+        pointRadius: 3
+    }));
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                zoom: zoomOptions
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true }
+            }
         }
-        return sum;
     });
 }
 
-// --- Chart Creation --- //
-// Colors for charts
-const chartColors = [
-    'rgb(255, 99, 132)',
-    'rgb(54, 162, 235)',
-    'rgb(255, 206, 86)',
-    'rgb(75, 192, 192)',
-    'rgb(153, 102, 255)',
-    'rgb(255, 159, 64)',
-    'rgb(201, 203, 207)',
-    'rgb(0, 162, 235)',
-    'rgb(255, 99, 71)',
-    'rgb(46, 139, 87)'
-];
+function createOverallChart(canvasId, dates, dataByRepo, label, color) {
+    if (dates.length === 0) return;
 
-// Default zoom options for all charts
-const zoomOptions = {
-    pan: {
-        enabled: true,
-        mode: 'xy',
-        threshold: 10
-    },
-    zoom: {
-        wheel: {
-            enabled: true
-        },
-        pinch: {
-            enabled: true
-        },
-        mode: 'xy',
-        speed: 0.05
-    },
-    limits: {
-        y: {min: 0}
-    }
-};
+    const totals = dates.map(date => {
+        let sum = 0;
+        Object.values(dataByRepo).forEach(repo => {
+            sum += repo[date] || 0;
+        });
+        return sum;
+    });
 
-
-// Create views chart
-function createViewsChart(labels, datasetsData) {
-    try {
-        const datasets = [];
-        let colorIndex = 0;
-        
-        for (const repo in datasetsData) {
-            datasets.push({
-                label: repo,
-                data: datasetsData[repo],
-                borderColor: chartColors[colorIndex % chartColors.length],
-                backgroundColor: chartColors[colorIndex % chartColors.length],
-                fill: false,
-                tension: 0.3,
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label,
+                data: totals,
+                borderColor: color,
+                backgroundColor: color + '20',
+                fill: true,
+                tension: 0.4,
                 pointRadius: 4
-            });
-            colorIndex++;
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                zoom: zoomOptions
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true }
+            }
         }
-        
-        const ctx = document.getElementById('viewsChart').getContext('2d');
-        window.viewsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Daily Views per Repository'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 20
-                        }
-                    },
-                    zoom: zoomOptions
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Views'
-                        }
-                    }
-                }
-            }
-        });
-        console.log('Views chart created');
-    } catch (error) {
-        console.error('Error creating views chart:', error);
-    }
+    });
 }
 
-// Create overall views chart
-function createOverallViewsChart(labels, data) {
-    try {
-        const ctx = document.getElementById('overallViewsChart').getContext('2d');
-        window.overallViewsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total Views',
-                    data: data,
-                    borderColor: 'rgb(0, 122, 204)',
-                    backgroundColor: 'rgba(0, 122, 204, 0.2)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: 'rgb(0, 122, 204)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Overall Daily Views'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + ' views';
-                            }
-                        }
-                    },
-                    legend: {
-                        display: false
-                    },
-                    zoom: zoomOptions
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Views'
-                        }
-                    }
-                }
-            }
-        });
-        console.log('Overall views chart created');
-    } catch (error) {
-        console.error('Error creating overall views chart:', error);
+// ==================== Export ====================
+function exportToCSV() {
+    if (allRepoData.length === 0) {
+        alert('No data to export');
+        return;
     }
+
+    const rows = [['Repository', 'Total Views', 'Unique Visitors', 'Total Clones', 'Unique Cloners']];
+
+    allRepoData.forEach(repo => {
+        rows.push([
+            repo.name,
+            repo.views?.count || 0,
+            repo.views?.uniques || 0,
+            repo.clones?.count || 0,
+            repo.clones?.uniques || 0
+        ]);
+    });
+
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `github-traffic-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+
+    URL.revokeObjectURL(url);
 }
 
-// Create clones chart
-function createClonesChart(labels, datasetsData) {
-    try {
-        const datasets = [];
-        let colorIndex = 0;
-        
-        for (const repo in datasetsData) {
-            datasets.push({
-                label: repo,
-                data: datasetsData[repo],
-                borderColor: chartColors[colorIndex % chartColors.length],
-                backgroundColor: chartColors[colorIndex % chartColors.length],
-                fill: false,
-                tension: 0.3,
-                pointRadius: 4
-            });
-            colorIndex++;
-        }
-        
-        const ctx = document.getElementById('clonesChart').getContext('2d');
-        window.clonesChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Daily Clones per Repository'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 20
-                        }
-                    },
-                    zoom: zoomOptions
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Clones'
-                        }
-                    }
-                }
-            }
-        });
-        console.log('Clones chart created');
-    } catch (error) {
-        console.error('Error creating clones chart:', error);
-    }
-}
-
-// Create overall clones chart
-function createOverallClonesChart(labels, data) {
-    try {
-        const ctx = document.getElementById('overallClonesChart').getContext('2d');
-        window.overallClonesChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total Clones',
-                    data: data,
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: 'rgb(75, 192, 192)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Overall Daily Clones'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + ' clones';
-                            }
-                        }
-                    },
-                    legend: {
-                        display: false
-                    },
-                    zoom: zoomOptions
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Clones'
-                        }
-                    }
-                }
-            }
-        });
-        console.log('Overall clones chart created');
-    } catch (error) {
-        console.error('Error creating overall clones chart:', error);
-    }
+// ==================== Utilities ====================
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
 }

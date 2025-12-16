@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Traffic Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Add Chart.js and plugins -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
-    <!-- Add axios for API calls -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
@@ -18,41 +16,42 @@
         <div class="login-container">
             <div class="login-card">
                 <div class="login-logo">
-                    <svg height="68" viewBox="0 0 16 16" width="68" fill="#333">
+                    <svg height="68" viewBox="0 0 16 16" width="68" fill="currentColor">
                         <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                     </svg>
                 </div>
                 <h1>GitHub Traffic Dashboard</h1>
                 <p class="login-desc">Enter your GitHub Personal Access Token to view your repository traffic data</p>
-                
+
                 <div class="app-features">
                     <h3>Track Your Repository Performance</h3>
                     <ul>
                         <li><span class="feature-icon">📊</span> View traffic stats for all your repositories</li>
                         <li><span class="feature-icon">👁️</span> Monitor daily views and unique visitors</li>
                         <li><span class="feature-icon">📥</span> Track repository clones over time</li>
-                        <li><span class="feature-icon">🔍</span> Zoom in on specific time periods with interactive charts</li>
-                        <li><span class="feature-icon">📈</span> Compare traffic across multiple repositories</li>
+                        <li><span class="feature-icon">🔍</span> Search and filter repositories</li>
+                        <li><span class="feature-icon">📈</span> Export data to CSV</li>
+                        <li><span class="feature-icon">🌙</span> Dark mode support</li>
                     </ul>
                     <div class="feature-note">
-                        Your data stays private - no token data is stored on our servers.
+                        Your data stays private - cached locally, no server storage.
                     </div>
                 </div>
-                
+
                 <div class="login-form">
                     <div class="form-group">
                         <label for="tokenInput">Personal Access Token</label>
-                        <input 
-                            type="password" 
-                            id="tokenInput" 
-                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" 
+                        <input
+                            type="password"
+                            id="tokenInput"
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                             autocomplete="off">
                     </div>
-                    
+
                     <div id="errorMessage" class="error-message hidden"></div>
-                    
+
                     <button id="loginButton" class="login-button">Sign In</button>
-                    
+
                     <div class="login-help">
                         <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
                             How to create a Personal Access Token
@@ -69,20 +68,90 @@
     <!-- Dashboard Screen -->
     <div id="dashboardScreen" class="screen dashboard-body hidden">
         <header class="dashboard-header">
-            <h1>GitHub Traffic Dashboard</h1>
-            <div class="user-info">
-                <span>User: </span>
-                <span id="username" class="username"></span>
+            <div class="header-left">
+                <svg height="28" viewBox="0 0 16 16" width="28" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+                <h1>Traffic Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <button id="themeToggle" class="icon-btn" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button id="refreshBtn" class="icon-btn" title="Refresh data">
+                    <span>🔄</span>
+                </button>
+                <button id="exportBtn" class="icon-btn" title="Export to CSV">
+                    <span>📥</span>
+                </button>
+                <div class="user-info">
+                    <img id="userAvatar" class="user-avatar" src="" alt="">
+                    <span id="username" class="username"></span>
+                </div>
                 <button id="logoutButton" class="logout-button">Logout</button>
             </div>
         </header>
 
         <main id="dashboardContent" class="dashboard-content">
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👁️</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalViews">0</span>
+                            <span class="stat-label">Total Views</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👤</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="uniqueVisitors">0</span>
+                            <span class="stat-label">Unique Visitors</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📥</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalClones">0</span>
+                            <span class="stat-label">Total Clones</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalRepos">0</span>
+                            <span class="stat-label">Repositories</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Top Repositories -->
+            <section class="top-repos-section">
+                <h2>🏆 Top Repositories (Last 14 Days)</h2>
+                <div class="top-repos-grid" id="topReposGrid">
+                    <!-- Will be populated by JS -->
+                </div>
+            </section>
+
+            <!-- Search and Filter -->
+            <section class="filter-section">
+                <div class="search-box">
+                    <input type="text" id="repoSearch" placeholder="🔍 Search repositories...">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="views">Has Views</button>
+                    <button class="filter-btn" data-filter="clones">Has Clones</button>
+                </div>
+            </section>
+
+            <!-- Charts -->
             <section class="chart-section">
-                <h2>Daily Views per Repository</h2>
-                <div class="zoom-controls">
+                <div class="chart-header">
+                    <h2>📈 Daily Views per Repository</h2>
                     <button class="zoom-btn" onclick="resetZoom('viewsChart')">Reset Zoom</button>
-                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="viewsChart"></canvas>
@@ -90,10 +159,9 @@
             </section>
 
             <section class="chart-section">
-                <h2>Overall Daily Views</h2>
-                <div class="zoom-controls">
+                <div class="chart-header">
+                    <h2>📊 Overall Daily Views</h2>
                     <button class="zoom-btn" onclick="resetZoom('overallViewsChart')">Reset Zoom</button>
-                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="overallViewsChart"></canvas>
@@ -101,10 +169,9 @@
             </section>
 
             <section class="chart-section">
-                <h2>Daily Clones per Repository</h2>
-                <div class="zoom-controls">
+                <div class="chart-header">
+                    <h2>📥 Daily Clones per Repository</h2>
                     <button class="zoom-btn" onclick="resetZoom('clonesChart')">Reset Zoom</button>
-                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="clonesChart"></canvas>
@@ -112,15 +179,17 @@
             </section>
 
             <section class="chart-section">
-                <h2>Overall Daily Clones</h2>
-                <div class="zoom-controls">
+                <div class="chart-header">
+                    <h2>📦 Overall Daily Clones</h2>
                     <button class="zoom-btn" onclick="resetZoom('overallClonesChart')">Reset Zoom</button>
-                    <div class="zoom-instruction">Use mouse wheel to zoom, click and drag to pan</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="overallClonesChart"></canvas>
                 </div>
             </section>
+
+            <!-- Cache Info -->
+            <div class="cache-info" id="cacheInfo"></div>
         </main>
     </div>
 
@@ -128,6 +197,10 @@
     <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>
         <p id="loadingText" class="loading-text">Connecting to GitHub...</p>
+        <div class="loading-progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p id="loadingSubtext" class="loading-subtext"></p>
     </div>
 
     <script src="app.js"></script>
