@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Traffic Dashboard</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
@@ -84,6 +85,9 @@
                 <button id="exportBtn" class="icon-btn" title="Export to CSV">
                     <span>📥</span>
                 </button>
+                <button id="exportJsonBtn" class="icon-btn" title="Export to JSON">
+                    <span>📄</span>
+                </button>
                 <div class="user-info">
                     <img id="userAvatar" class="user-avatar" src="" alt="">
                     <span id="username" class="username"></span>
@@ -151,7 +155,10 @@
             <section class="chart-section">
                 <div class="chart-header">
                     <h2>📈 Daily Views per Repository</h2>
-                    <button class="zoom-btn" onclick="resetZoom('viewsChart')">Reset Zoom</button>
+                    <div class="chart-actions">
+                        <button class="zoom-btn" onclick="exportChartPNG('viewsChart')">Save PNG</button>
+                        <button class="zoom-btn" onclick="resetZoom('viewsChart')">Reset Zoom</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="viewsChart"></canvas>
@@ -161,7 +168,10 @@
             <section class="chart-section">
                 <div class="chart-header">
                     <h2>📊 Overall Daily Views</h2>
-                    <button class="zoom-btn" onclick="resetZoom('overallViewsChart')">Reset Zoom</button>
+                    <div class="chart-actions">
+                        <button class="zoom-btn" onclick="exportChartPNG('overallViewsChart')">Save PNG</button>
+                        <button class="zoom-btn" onclick="resetZoom('overallViewsChart')">Reset Zoom</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="overallViewsChart"></canvas>
@@ -171,7 +181,10 @@
             <section class="chart-section">
                 <div class="chart-header">
                     <h2>📥 Daily Clones per Repository</h2>
-                    <button class="zoom-btn" onclick="resetZoom('clonesChart')">Reset Zoom</button>
+                    <div class="chart-actions">
+                        <button class="zoom-btn" onclick="exportChartPNG('clonesChart')">Save PNG</button>
+                        <button class="zoom-btn" onclick="resetZoom('clonesChart')">Reset Zoom</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="clonesChart"></canvas>
@@ -181,10 +194,40 @@
             <section class="chart-section">
                 <div class="chart-header">
                     <h2>📦 Overall Daily Clones</h2>
-                    <button class="zoom-btn" onclick="resetZoom('overallClonesChart')">Reset Zoom</button>
+                    <div class="chart-actions">
+                        <button class="zoom-btn" onclick="exportChartPNG('overallClonesChart')">Save PNG</button>
+                        <button class="zoom-btn" onclick="resetZoom('overallClonesChart')">Reset Zoom</button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="overallClonesChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Weekday Activity -->
+            <section class="chart-section">
+                <div class="chart-header">
+                    <h2>📅 Activity by Day of Week</h2>
+                    <div class="chart-actions">
+                        <button class="zoom-btn" onclick="exportChartPNG('weekdayChart')">Save PNG</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="weekdayChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Popular Referrers -->
+            <section class="chart-section">
+                <div class="chart-header">
+                    <h2>🔗 Top Traffic Referrers (Top 5 Repos)</h2>
+                    <div class="chart-actions">
+                        <button class="zoom-btn" onclick="exportChartPNG('referrersChart')">Save PNG</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="referrersChart"></canvas>
+                    <p id="referrersNote" class="chart-note hidden"></p>
                 </div>
             </section>
 
@@ -202,6 +245,9 @@
         </div>
         <p id="loadingSubtext" class="loading-subtext"></p>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
 
     <script src="app.js"></script>
 </body>
